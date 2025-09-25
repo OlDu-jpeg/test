@@ -1,0 +1,457 @@
+dans display:
+ajout d'un saut a laligne tout les 9 chiffre affiché
+
+stockage de 9
+stockage de indice%9 dans un registre, div indice, 9
+stockage du reste, mfhi
+branchement a affiche un saut à la ligne si c'est = à 0
+
+
+
+en .text, charger la grille dans un tableau en a0
+
+
+
+{
+.data
+  # constante
+  huit: .byte 8
+  neuf: .byte 9
+  
+
+}
+
+Fonction solve_sudoku:
+  
+Entrée: chaine grilleincomplète en $a0
+Sortie: rien
+
+début:
+
+ 
+
+ ## parcours de grilleincomplète, rend l'indice du premier 0, sinon rend -1
+ ## indicevide = parcours(grilleincomplète)
+ {
+ # boucle qui parcours la grille 
+ li $t1, 0 		# compteur de la boucle
+ la $t0, grille 	#charger adresse de grille[0]  (il faut que ce soi un argument, en $a)(ou alors creer un espace dans la pile pour ce tableau de 81 entiers)
+ boucle_grille:
+   bge $t1, 81, end_boucle_faux 		# while compteur < taille(grille), sinon branchement a fin de boucle
+     add $t2, $t1, $t0   		# indice du tableau dans $t2
+     beq $zero ,$t2($t0), end_boucle_vrai  #si grille[indice] = 0, branchement vers end_boucle_vrai
+     addi $t1 , 1			# incr compteur
+     j boucle_grille 			# retour au debut de la boucle while
+ end_boucle_vrai:
+   move $s0, $t2 	# stock l'indice dans $s0 (temp non ecraser entre appel)
+   jr $ra 		# retour a la fonction qui as appelé
+end_boucle_faux:
+   li $s0, -1 		# stock dans $s0 (temp non ecraser entre appel)
+   jr $ra 		# retour a la fonction qui as appelé
+  }   
+   
+ ## si indicevide est égal à -1
+  beq $s0, -1, continue 		# si l'indice est different de -1, alors le programme continue, sinon:
+   
+    ## alors affiche grilleincomplète et retourne VRAI # arret de la récursion
+    jal displayGrille			# saut vers dsiplayGrille
+    li $s7,1				# stock le booleen de sortie (VRAI, 1) de solve_sudoku dans $t7, ou aors le stocker dans la pile??? avec sp? et l(indice est dans $s0
+    jal sortie_de_solve_sudoku
+    
+  ## finsi
+  
+  continue:
+  
+  ## pour i de 1 à 9:  # i dans $t3
+  li $t3, 1 	# charge 1 dans le compteur t3
+  li $t4, 9	# charge 9 dans la fin de boucle dans t4
+  
+boucle_2_recursion:  ble $t3, $t4, fin_boucle_2_recursion
+  
+    ## mettre i dans l'indicevide de grilleincomplète
+       			
+       					# adresse de la grille[indice $t2($t0)) ($t2 indice de la boucle précedente)
+    sw $t3, grille ($t2($t0))		# stock l'indice $t3 dans la grille[indice $t2($t0)) ($t2 indice de la boucle précedente)
+    
+    
+    ## verif = check_sudoku(grilleincomplète)
+    
+    jal check_sudoku  # ou sera stocké le booléen de sortie? disons $s1 pour l'instant
+
+    
+    ## si verif est VRAI
+    beq $s1, $zero, fin_boucle_3_retropropa	#si check_sodoku == faux, saut a la fin de la boucle 
+    
+      ## alors
+      ## recursion = solve_sudoku(grilleincomplète) #appel récursif 
+      jal solve_sudoku # ou sera sotocké le booléen de sortie, dans $s1 pour l'instant puisque plus besoin pour boucle2 
+      
+      ## si recursion est VRAI
+        
+        beq $s1, $zero, sinon_boucle_4
+        
+        ## retourne VRAI
+        
+        li $s1, 1  	# stock vrai dans le registre $s1, un booleen
+        j $ra		
+        # et retour, est-il bon??? 
+      
+      ## sinon
+      sinon_boucle_4:  	# Retirer chiffre de grille[ligne][colonne]  // Rétro-propagation
+      ## FinSi
+      fin_boucle_3_retropropa:
+      li $t3, 1 	# incr du compteur t3 de la boucle 2
+      j boucle_2	# retour a la boucle 2
+    
+    ## Finsi
+  fin_boucle_2_recursion:
+  
+  ## Retourner FAUX  // Aucun chiffre valide
+  li $s1, 0
+  
+  
+  
+  
+  
+    /*
+## creer le tableau 
+la $t3, $sp		# stock l'adresse de sp dans $t3, $t3 deviens tabbool[0]
+add $sp, $sp, -36	# fait de la place pour le tab de 9 entier
+li $t4, 0 		# intitialisation de l'entier bool
+  */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    ### check_sudoku
+  #entrée: grille
+  #sortie: booléen
+  
+  #appel de 	check_square(grille)
+  		check_row(grille)
+  		check_column(grille)
+  # si tout vrai retourne vrai  
+  # dans une variable, additionne les booleen retourné des check_truc, si = 3, retourne vrai
+  
+  
+  
+  
+  ### check_line
+  # appel check_n_line en y envoyant la grille et le numero de ligne, et additionne les booleen en retour de check_n_line, si l'addition fait 9, renvoie VRAI  
+  #entrée: grille (adresse de la grille)
+  #local: entier bool, qui additionne les booleen de l'appel de check_n_line
+  #sortie: booléen
+
+  
+
+  
+ 	## appel en boucle qui checke toute les ligne
+  li $t1, 0		# compteur boucle
+  li $t2, 8		# fin de compteur boucle
+  boucle1:
+  bge $t1, $t2, fin_de_check_line
+    mv @grille, $a1 	# charge arg1, adresse de grille a1
+    mv $t1, $a2		# charge arg2, n, en a2
+    jal check_n_ligne #voir correspondance des registre en argument 
+    j boucle1
+ 
+  fin_de_check_line:
+  
+  
+  
+  
+  
+  
+    ### check_n_line
+    # envoie dans check les numero d'une ligne n de la grille
+  #entrée: grille $a0 , numero $a1
+  # local: un tableau de 9 entiers, tab1
+           compteur $t1, fin de compteur $t2=8
+           
+  # sortie: booléen
+  
+  la $t3, $sp		# stock l'adresse de sp dans $t3, $t3 deviens *tab1[0]
+  add $sp, $sp, -36	# fait de la place pour les 9 entiers de tab1
+  
+  li $t1, 0		# initialisation compteur
+  li $t2 , 8   		# initialisation fin de compteur
+  
+  
+  add $t1, $t1, $t4	# ajout à compteur
+  add $t2, $t2, $t4 	# ajout à fin de compteur
+  			# boucle de n*9 à n*9+8 
+  
+  mul $t4, $a0, neuf	   	# t4 <- n*9 
+  
+  boucle1: 	# boucle pour stocker les chiffres de la n-ième ligne de la grille dans tab1
+  bge  $t1, $t2, fin_boucle1
+    
+    add $t5, $t4, $t1		# t5 <- n*9+compteur
+    lw $t6, $t5(grille) 	# charge la valeur de grille[t5] dans t6  
+    sw $t6, $t1($t3) 		# et la stocke dans tab1[t1]
+    
+    addi $t1, 1		# i++
+    
+  fin_boucle1:
+  jra check  			# envoie de tab1 dans check (comment passer le tableau en argument???)
+  				# retour apres le check, comment on recupère le résultat? le bool, car on le renvoie direct a check_line
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    ### check_column
+  # divise grille en tableau de 9 entiers (en column) et envoie les tab de 9 entier dans check_n_column
+  # dans une variable, additionne les booleen retourné des check_n_column, si = 9, retourne vrai
+  #entrée: grille
+  #sortie: booléen
+  
+  # divise en column et envoie les tab de 9 entier dans check_n_column
+  
+    ### check_n_column
+  #entrée: grille, numero
+  #sortie: booléen
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    ### check_square
+    # divise grille en tableau de 9 entiers (en square) et envoie les tab de 9 entier dans check_n_square
+  # dans une variable, additionne les booleen retourné des check_n_square, si = 9, retourne vrai
+  #entrée: grille
+  #sortie: booléen
+  
+  
+    ### check_n_square
+  #entrée: grille, numero
+  #sortie: booléen
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+			  
+			  
+			  déclarer des étiquette en fonction apellée?
+			  load byte ca load quoi?
+			  $t dans la pile? p60
+			  lb $t4, $t1($t3) ca marche???
+			  bgt $t4, 2??? ca marche???
+			  
+  ### check   (à corriger selon les note dans le bloc note)
+  #entrée: tableau de 9 entier (dans le stack donc), tab1
+  #local: un tableau de 9 entier, tous des 0, tab2 (sert à compter le nombre de [0-9] dans tab1)
+          un compteur en $t1, 
+          des constantes $t2=8, $t6=2
+  #sortie: booléen
+  
+  li $t0, tab9entier	# charge adresse du tableau dans $t0 ((a corriger, il sera deja dans un registre pour l'entrée))
+  li $t1, 0		# compteur boucle
+  li $t2, 8		# fin de compteur boucle
+  li $t6, 1
+  
+  # crée un tab de 9 entier, plein de zero, tab1
+  
+  la $t3, $sp		# stock l'adresse de sp dans $t3, $t3 deviens *tab2[0]
+  add $sp, $sp, -36	# fais de la place pour le tab de 9 zero
+  
+  boucle1:		#boucle 1 qui initialise la tab2 (i = t1, pour i<t2)
+  bge $t1, $t2, fin_boucle1 	
+    sw $zero, $t1($t3)	# initialise tous les éléments de tab2 à 0
+    addi $t1, 1
+    j boucle1
+  fin_boucle1:
+  li $t1, 0		# reset le compteur $t1
+  
+  boucle2: 		# incremente de 1 tab2[tab1[i-ème]] , (i = t1, pour i<t2)    
+    bge $t1, $t2, fin_de_check__vrai  	# condition de boucle
+    
+    lb $t4, $t0($t1) 	# charge la valeur de [tab1[i-ieme]] dans $t4
+    lw $t5, $t4($t2)	# charge la valeur de t4(t2) dans t5
+    addi $t5, 1		# incremente de 1 $t5
+    
+    bgt $t5, $t6, fin_de_check__faux	# teste si t5>1 (cad si il y a plus d'une fois un meme chiffre dans le tableau à checker) sinon la fontion check doit retourner faux
+    
+    addi $t1, 1		# i++
+    j boucle2		# retour au début de boucle
+    
+ 
+  fin_de_check__vrai:
+  li $s0, 1 	# fonction check retourne VRAI
+  jra		# saut à la fonction appellante
+  
+  fin_de_check__faux:
+  li $s0, 0	# fonction check retourne FAUX
+  jra		# saut à la fonction appellante
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  rapport:
+  
+  page 27 de la doc pour comprendre le fonctionnement de sp
+  non-leaf function: procédure
+  
+  utilisation d'un mot indice poiur l'indice dasn les instruction type 100(@)
+  
+  utilisation de mul sans recup dans hi lo parce que tres petit resultat
+  
+  chargement de constante dans indice,
+      sw $t2, indice
+    lw $t2, indice($t0)
+  ou dans un regstre
+      li $t2, 9
+    mul $t3, $a1, $t2		# t3 <- compteur*9 
+  mais peut-on faire autrement?
+  j'ai trouver un moyen: 
+  add reg1, @, indice
+  lb reg2, reg1
+  
+  https://largo.lip6.fr/trac/sesi-ose/chrome/site/mips32assembleur_li312.pdf
+  decrémentation de n*4 octets pour avoir n-1 cases libres
+  
+  pas le temps d'enlever les sauvergarde de retour de fonction inutile
+  
+  on pourati simplfier les 3 check_truc en un seul avec un parametre pour choisir quel check_n_truc appeler
+  
+  main 
+  
+  transforme la grille en type byte
+  puis l'envoie dans solve soduku
+  
+  
+  
+  
+Nous avons commencé par survoler le sujet pour comprendre ce qui était a faire, puis nous avons essayer de mettre en place un schéma du fonction du programme, avec les
+fonctions à faire, et leurs interaction. Voir fichier excalidraw dans l'archive
+  
+Nous avons ajouter dès le début de la conception une fonction supplémentaire, check, que nous détailleront plus loin.
+
+Nous nous sommes diviser le travail en deux, un fera la partie solve_sudoku, l'autre la partie des checks.
+
+Nous avons commencer à annoter les fonctions sujet, et aussi à ajouter une fonctionnalité de retour à la ligne dans displayGrille, cela nous as aider à nous familiariser avec le fonctionnement de mars et du langage assembleur.
+Ensuite nous avons fait un brouillon de pseudo-code (moitié algo, moitié langage c, car c'est la manière la plus naturelle pour nous de construire une ébauche pour le moment),
+puis nous avons ajouter dans ce brouillon, les instruction assembleur qui nous semblait remplir les fonction de nos lignes de pseudo-code.
+Après avoir dégrossis tout le programme avec ce brouillon, nous avons mis l'ébauche d'assembleur dans Mars pour le tester.
+Nous avons vite compris que en assembleur, nous allions manquer de registre, car nous avions construit le programme comme si le nombre de registre était infini et qu'il étaient magiquement accesible d'une fonction à l'autre.
+Nous avons donc dû nous inéresser au stockage des registres et variables dans la pile, en la décrémentant en début de fonction, pour y stocker le registre de lien de saut ($ra) et d'autres variables locales si besoin d'appeller d'autres focntion.
+
+
+Mais malheureusement, le programmene renvoie qu'une seule grille juste quand il en existe plusieurs possibles. Nous avons passer énormément de temps à chercher pourquoi, et la date de rendu est arriver avant que nous ne puissions corriger ce soucis. Nous pensons que le soucis doit venir de la réécriture de grille dans solve_sudoku. 
+Nous avons essayer de stopper l'exécution du programme dans Mars mais, le défilement automatique est trop rapide, et nous n'avons aucune idée du moment ou cette erreur arrive, aussi faire défiler les instructions à 30 par sec est trop lent, et il n'y a pas de vitesse intermédiaire dans Mars, nous avons eu beau chercher sur internet, pas moyen d'accélérer le défilement, ou de le stopper à la n-ième instruction, cela nous aurait été d'une grande aide.  
+
+Par conséquent, nous n'avons pas non plus eu le temps de rendre le programme utilisable avec spim et des fichiers contenant des grilles.
+
+check
+algo de selection des indices
+
+solve
+récursion, stockage de la grille? modification de la grille
+
+Nous avons refait le programme plusieurs fois:
+
+nous utilisions une variable .byte nommée <indice>, dans la quel nous chargions la constance pour l'utilisée comme indice d'une adresse
+    sw $t2, indice
+    lw $t2, indice($t0)
+    
+Puis nous avons avons finalement utiliser une autre méthode, plus fiable:
+    ecrire dans un registre la somme de l'adresse et de l'indice pour l'utiliser en tant qu'adresse
+    add $t0, @, indice
+    sw $t1, ($t0)
+    
+on ne charge pas les résultat de multiplication dans hi et lo, puisque qu'on ne multiplie pas de grand nombre    
+      li $t2, 9
+    mul $t3, $a1, $t2		
+
+Pour la sauvegarde de variable dans la pile n vue d'appel de fonction, nous nous sommes aidés d'un cours posté sur internet : https://largo.lip6.fr/trac/sesi-ose/chrome/site/mips32assembleur_li312.pdf
+Nous avons utlisés leurs commentaires pour nous éclairer sur la marche à suivre:
+#- prologue
+#- corps de la fonction
+#- épilogue
+
+
+
+Notre programme envoie la grille, préalabrement transformée en type .byte, dans solve_sudoku, qui va chercher le indice de la premier case qui contient un 0.
+Si il n'y en a pas, alors solve_sudoku envoie la grille dans display qui l'affichera (elle sera forcément valide, puisque plus bas, il n'y aura de récursion sur solve_sudoku que si la grille n'est pas fausse)
+sinon, une boucle 1 à 9 change la valeur de cet indice, de 1 jusqu'à 9. Et a chaque fois la grille passe dans check_sudoku qui vérifie si elle ne contient pas d'erreur
+Si la grille n'est pas fausse, il y a récursion, on renvoie la grille dans un solve_sudoku (et si elle est complète, elle sera alors affichée)
+Sinon, la boucle recommence avec le chiffre suivant.
+
+Ainsi toute les possibilité de grille sont explorée, et automatiquement afficher lorsque la grille est juste ET complète.
+
+Les checks:
+pour qu'une grille soit valide, il faut que, toute ses lignes sont valides, toutes ses colonnes, et tous ses carrés. Ces objet sont valides si il suivent la mêmes règle, leurs 9 chiffres sont tous différent, nous avons donc une fonction très basique qui vérifie 9 chiffres, la fonction supplémentaire check, et renvoye VRAI ou FAUX en conséquence.
+Le travail des check_n_choses est alors d'envoyer un tableau de 9 entiers de la bonne ligne/colonne/carré, il y a alors un petit algorithme dans chacun d'eux pour bien sélectionner les bons indices de grille.
+Les check_choses appel les 9 check_n_choses, et check_sudoku appel les 3 check_choses. 
+
+La fonction check rend un booléen mais inversé, 1 = FAUX et 0 = VRAI, de cette manière, on peut les additionner et vérifier simplement avec un beqz si au moins 1 des tests est faux, ce qui suffit à invalider la grille
+
+Selection indice de la n-ième ligne:
+de (n-1)*9+i avec i de 0 à 8
+
+Selection indice de la n-ième colonne:
+de (n-1)+9*i avec i de 0 à 8
+
+Selection indice du n-ième carré:
+Il y a 9 possibilité du premier indice d'un carré, et depuis cet indice, on récupere les 2 suivant, puis les 3 a la meme position de ligne de la colonne en-dessous, idem pour la dernière colonne
+Tout cela avec 2 boucle for, une pour la ligne, une autre pour la colonne (voir dans les commentaires du programme)
+
+
+
+Ce que nous n'avons pas fait:
+
+Utiliser les registre $v0 $v1 pour les retour de fonction
+Implémenter le programme pour spim
+
+Trouver d'ou viens l'erreur: une seule des possibilités s'affiche:
+nous avons tenter à la dernière minute de sauvegarder à chaque appel de solve_sudoku la grille en .byte dans la pile (en 24 octets donc), pour modifier seulement la copie de la grille, et la passer en argument ensuite, mais l'éxecution semble tourner en boucle,  nous avons manqué de temps pour essayer cette idée.
+
+Malgré l'échec du projet, nous avons pris du plaisir à coder en assembleur, faire fonctionner (plus ou moins) un processeur en regardant à travers est très satisfesant. Aussi nous espérons que notre programme, même s'il ne fonctionne pas parfaitement, est compréhensible grâce à nos nombreux commentaires
+
+Olivier DUMAY Gr1
+Patrick SKALA Gr2
